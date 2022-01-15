@@ -2,6 +2,7 @@ const _ = require("lodash");
 const luxon = require("luxon");
 
 const luxonDateTime = luxon.DateTime;
+const DATE_FORMAT_FULL  = 'yyyy-MM-dd hh:mm:ss.SSS ZZZZ';
 
 module.exports = class ProgressFollowup {
   constructor(totalAmountOfIterations, logEvery = 10) {
@@ -30,25 +31,30 @@ module.exports = class ProgressFollowup {
       const startTime = _.head(this.checkpoints);
       const lastTime = _.last(this.checkpoints);
 
-      const elapsedTime = lastTime - startTime;
+      const elapsedTimeInMS = lastTime - startTime;
 
-      const velocity = _.round(elapsedTime / iterationsSoFar, 2);
+      const velocity = _.round(elapsedTimeInMS / iterationsSoFar, 2);
 
       const remainingToProcess = this.totalAmountOfIterations - iterationsSoFar;
 
-      const estimated = (elapsedTime * remainingToProcess) / iterationsSoFar;
+      const estimated = (elapsedTimeInMS * remainingToProcess) / iterationsSoFar;
 
       const finishDate = luxonDateTime
         .fromMillis(Date.now() + estimated)
-        .toString();
+        .toFormat(DATE_FORMAT_FULL);
 
       const remainingTime = luxon.Duration.fromObject({
         milliseconds: estimated,
-      }).toFormat("hh:mm:ss S");
+      }).toFormat("hh:mm:ss.SSS");
+
+      const elapsedtimePretty = luxon.Duration.fromObject({
+        milliseconds: elapsedTimeInMS,
+      }).toFormat("hh:mm:ss.SSS");
+
 
       console.log(
-        `${luxonDateTime.now().toString()}: [${iterationsSoFar}/${this.totalAmountOfIterations}] ` +
-        `elapsed time [${elapsedTime} ms], velocity [${velocity} ms/iteration] ` +
+        `${luxonDateTime.now().toFormat(DATE_FORMAT_FULL)}: [${iterationsSoFar}/${this.totalAmountOfIterations}] ` +
+        `elapsed time [${elapsedtimePretty}], velocity [${velocity} ms/iteration] ` +
         `remaining [${remainingTime}] ====> ETA at ${finishDate}`
       );
     }
